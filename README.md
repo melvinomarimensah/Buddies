@@ -4,10 +4,10 @@ Trade with your people. Buddies is a peer-to-peer marketplace built exclusively 
 students — list, discover, and trade products and services with people on your own campus and
 beyond.
 
-This repo covers the foundation, the core marketplace loop, and real-time messaging: marketing
-pages, student auth, browse with filters/search, listing detail, the create/edit listing flow,
-profile pages, and a realtime chat inbox tied to listings. The admin panel is planned as a
-follow-up phase and is not in this build yet.
+This repo is a complete build: the foundation and core marketplace loop, real-time messaging, and
+a role-gated admin panel. Marketing pages, student auth, browse with filters/search, listing
+detail, the create/edit listing flow, profile pages, a realtime chat inbox tied to listings, and
+an admin panel for moderation and management.
 
 ## Tech stack
 
@@ -130,8 +130,27 @@ prisma/
   listing + buyer/seller pair, and the `/messages` inbox delivers messages in real time via
   Supabase Realtime broadcast channels (with typing indicators, read receipts, a persistent safety
   banner, and a "Mark as met" flow that flips the listing to `SOLD` once both parties confirm).
-- **Admin panel:** not yet built. The `Report` and `AuditLog` models exist in the schema to support
-  it later.
+- **Admin panel:** live at `/admin`, gated by `role === 'ADMIN'`. Non-admins (including signed-out
+  visitors) get a **404**, so the panel never reveals itself. It has a separate branded sign-in at
+  `/admin/login`, a dashboard (KPIs, top categories, recent activity), listings management
+  (search/filter, status changes, bulk remove), users management (verify, suspend, promote/demote),
+  a reports queue (dismiss or remove-listing), and universities/categories CRUD. Every admin write
+  is recorded to the `AuditLog` table.
+
+## Admin accounts
+
+There are two ways to create an admin (no one can self-register as one):
+
+```bash
+# Option A — promote an existing account (they must have signed up first)
+npm run make-admin -- you@example.com
+
+# Option B — create a dedicated admin account (Supabase Auth + DB together)
+# Reads ADMIN_EMAIL / ADMIN_PASSWORD from .env; generates a password if omitted.
+npm run seed:admin
+```
+
+Then sign in at [`/admin/login`](http://localhost:3000/admin/login).
 
 ## Available scripts
 
@@ -141,4 +160,6 @@ prisma/
 | `npm run build` | Production build |
 | `npm run start` | Run the production build |
 | `npm run lint` | Run ESLint |
+| `npm run seed:admin` | Create a dedicated admin account |
+| `npm run make-admin -- <email>` | Promote an existing account to admin |
 | `npx prisma studio` | Browse the database visually |

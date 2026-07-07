@@ -53,6 +53,7 @@ model User {
   bio          String?
   role         Role     @default(STUDENT)
   isVerified   Boolean  @default(false)
+  isSuspended  Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

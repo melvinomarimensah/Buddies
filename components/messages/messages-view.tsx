@@ -16,20 +16,10 @@ import {
 } from "@/lib/actions/messages";
 import type { ChatMessage, ConversationSummary } from "@/lib/messages-types";
 import { formatPrice, cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/shared/empty-state";
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 export function MessagesView({
   currentUserId,

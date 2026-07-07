@@ -13,6 +13,7 @@ import { SellerCard } from "@/components/listings/seller-card";
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { MessageSellerButton } from "@/components/listings/message-seller-button";
 import { FavoriteButton } from "@/components/shared/favorite-button";
+import { ReportButton } from "@/components/shared/report-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -145,6 +146,10 @@ export default async function ListingDetailPage({
                   {listing.description}
                 </p>
               </div>
+
+              {!isOwner ? (
+                <ReportButton listingId={listing.id} isAuthenticated={Boolean(user)} />
+              ) : null}
             </div>
           </div>
 

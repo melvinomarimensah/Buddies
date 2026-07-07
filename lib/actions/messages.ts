@@ -13,9 +13,18 @@ async function getUserId() {
   return user?.id ?? null;
 }
 
+async function isSuspended(userId: string) {
+  const profile = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isSuspended: true },
+  });
+  return Boolean(profile?.isSuspended);
+}
+
 export async function startConversationAction(listingId: string) {
   const userId = await getUserId();
   if (!userId) return { error: "Sign in to message a seller." };
+  if (await isSuspended(userId)) return { error: "Your account is suspended." };
 
   const listing = await prisma.listing.findUnique({ where: { id: listingId } });
   if (!listing || listing.status === "REMOVED") {
@@ -52,6 +61,7 @@ export async function sendMessageAction(input: { conversationId: string; body: s
 
   const userId = await getUserId();
   if (!userId) return { error: "Sign in to send messages." };
+  if (await isSuspended(userId)) return { error: "Your account is suspended." };
 
   const conversation = await prisma.conversation.findUnique({
     where: { id: parsed.data.conversationId },

@@ -29,7 +29,17 @@
       "Bash(mkdir -p \"/Users/melvinmensah/Desktop/Buddies Project/app/sell/new\" \"/Users/melvinmensah/Desktop/Buddies Project/app/sell/[id]/edit\")",
       "Bash(mkdir -p \"/Users/melvinmensah/Desktop/Buddies Project/components/account\" \"/Users/melvinmensah/Desktop/Buddies Project/app/u/[username]\" \"/Users/melvinmensah/Desktop/Buddies Project/app/account\")",
       "Bash(node -e ' *)",
-      "Bash(pkill -f \"prisma migrate status\")"
+      "Bash(pkill -f \"prisma migrate status\")",
+      "Bash(git config *)",
+      "Bash(git commit *)",
+      "Bash(gh auth *)",
+      "Read(//Users/melvinmensah/**)",
+      "Bash(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -T git@github.com)",
+      "Bash(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -T git@github.com)",
+      "Bash(ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -vT git@github.com)",
+      "Bash(ssh-keygen -lf ~/.ssh/id_ed25519.pub)",
+      "Bash(git ls-remote *)",
+      "Bash(ADMIN_EMAIL=\"admin@buddies.app\" ADMIN_PASSWORD=\"BuddiesAdmin!2026\" npm run seed:admin)"
     ]
   }
 }

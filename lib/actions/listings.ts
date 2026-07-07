@@ -22,6 +22,9 @@ export async function createListingAction(input: CreateListingInput) {
   }
 
   const profile = await prisma.user.findUnique({ where: { id: user.id } });
+  if (profile?.isSuspended) {
+    return { error: "Your account is suspended and can't publish listings." };
+  }
   if (!profile?.universityId) {
     return { error: "Add your campus to your profile before publishing a listing." };
   }
