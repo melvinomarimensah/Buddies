@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --use-npm --skip-install=false)",
+      "Read(//Users/melvinmensah/Desktop/**)",
+      "Bash(npx --yes create-next-app@latest buddies-tmp --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --use-npm)",
+      "Bash(npm install *)",
+      "Bash(npm view *)",
+      "Bash(npx prisma *)",
+      "Bash(rm -f prisma/schema.prisma prisma.config.ts .env)",
+      "Bash(rmdir prisma *)",
+      "Bash(npx shadcn@latest init -y -b neutral)",
+      "Bash(npx shadcn@latest init --help)",
+      "Bash(npx shadcn@latest init -y -b radix)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add button card input textarea label select dialog dropdown-menu avatar badge skeleton tabs sonner carousel separator switch checkbox radio-group form popover calendar tooltip alert-dialog)",
+      "Bash(npx shadcn@latest add form)",
+      "Bash(npx shadcn@latest add form --overwrite -v)",
+      "Bash(npx shadcn@latest view form)",
+      "Bash(npx shadcn@latest search form)",
+      "Bash(npm uninstall *)",
+      "Bash(npx shadcn@3.8.5 init -y -b neutral)",
+      "Bash(npx shadcn@3.8.5 add button card input textarea label select dialog dropdown-menu avatar badge skeleton tabs sonner carousel separator switch checkbox radio-group form popover calendar tooltip alert-dialog)",
+      "Bash(npm run *)",
+      "Bash(npx eslint *)",
+      "Bash(npx tsc *)",
+      "Bash(mkdir -p \"/Users/melvinmensah/Desktop/Buddies Project/app/listings/[id]\")",
+      "Bash(mkdir -p \"/Users/melvinmensah/Desktop/Buddies Project/app/sell/new\" \"/Users/melvinmensah/Desktop/Buddies Project/app/sell/[id]/edit\")",
+      "Bash(mkdir -p \"/Users/melvinmensah/Desktop/Buddies Project/components/account\" \"/Users/melvinmensah/Desktop/Buddies Project/app/u/[username]\" \"/Users/melvinmensah/Desktop/Buddies Project/app/account\")",
+      "Bash(node -e ' *)",
+      "Bash(pkill -f \"prisma migrate status\")"
+    ]
+  }
+}

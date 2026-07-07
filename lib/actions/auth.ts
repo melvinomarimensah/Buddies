@@ -1,0 +1,163 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { createClient } from "@/lib/supabase/server";
+import {
+  forgotPasswordSchema,
+  signInSchema,
+  signUpSchema,
+  updatePasswordSchema,
+} from "@/lib/validations/auth";
+
+export type AuthActionState = {
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+} | null;
+
+function getSiteUrl() {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+}
+
+export async function signUpAction(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const parsed = signUpSchema.safeParse({
+    fullName: formData.get("fullName"),
+    username: formData.get("username"),
+    email: formData.get("email"),
+    universityId: formData.get("universityId"),
+    password: formData.get("password"),
+  });
+
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const { fullName, username, email, universityId, password } = parsed.data;
+
+  const university = await prisma.university.findUnique({
+    where: { id: universityId },
+  });
+
+  if (!university) {
+    return { fieldErrors: { universityId: ["Pick a school from the list."] } };
+  }
+
+  const [existingUsername, existingEmail] = await Promise.all([
+    prisma.user.findUnique({ where: { username } }),
+    prisma.user.findUnique({ where: { email } }),
+  ]);
+
+  if (existingUsername) {
+    return { fieldErrors: { username: ["That username is already taken."] } };
+  }
+  if (existingEmail) {
+    return { error: "An account with that email already exists. Try signing in instead." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${getSiteUrl()}/auth/callback`,
+    },
+  });
+
+  if (error || !data.user) {
+    return { error: error?.message ?? "We couldn't create your account. Please try again." };
+  }
+
+  await prisma.user.create({
+    data: {
+      id: data.user.id,
+      email,
+      fullName,
+      username,
+      universityId: university.id,
+      isVerified: false,
+    },
+  });
+
+  if (data.session) {
+    redirect("/account");
+  }
+
+  redirect("/auth/verify-email");
+}
+
+export async function signInAction(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const parsed = signInSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const redirectTo = formData.get("redirectTo");
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+
+  if (error) {
+    if (error.code === "email_not_confirmed") {
+      return {
+        error:
+          "Please confirm your email first — check your inbox for the link we sent when you signed up.",
+      };
+    }
+    return { error: "That email and password don't match. Give it another try." };
+  }
+
+  redirect(typeof redirectTo === "string" && redirectTo.startsWith("/") ? redirectTo : "/account");
+}
+
+export async function signOutAction() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/");
+}
+
+export async function forgotPasswordAction(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const parsed = forgotPasswordSchema.safeParse({ email: formData.get("email") });
+
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${getSiteUrl()}/auth/update-password`,
+  });
+
+  return { error: undefined };
+}
+
+export async function updatePasswordAction(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const parsed = updatePasswordSchema.safeParse({ password: formData.get("password") });
+
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+
+  if (error) {
+    return { error: "We couldn't update your password. Try requesting a new reset link." };
+  }
+
+  redirect("/account");
+}

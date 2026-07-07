@@ -1,0 +1,147 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 1rem;
+
+  /* Buddies brand palette (light) */
+  --brand-primary: #4f46e5;
+  --brand-primary-hover: #4338ca;
+  --brand-accent: #fb7185;
+  --brand-accent-soft: #ffe4e6;
+  --brand-success: #10b981;
+  --brand-warning: #f59e0b;
+  --brand-bg: #faf9f6;
+  --brand-surface: #ffffff;
+  --brand-ink: #0f172a;
+  --brand-muted-text: #64748b;
+  --brand-border: #e2e8f0;
+
+  /* shadcn semantic tokens, driven by the brand palette */
+  --background: var(--brand-bg);
+  --foreground: var(--brand-ink);
+  --card: var(--brand-surface);
+  --card-foreground: var(--brand-ink);
+  --popover: var(--brand-surface);
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: var(--brand-ink);
+  --muted: #f1f5f9;
+  --muted-foreground: var(--brand-muted-text);
+  --accent: #eef2ff;
+  --accent-foreground: var(--brand-ink);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: var(--brand-border);
+  --input: var(--brand-border);
+  --ring: var(--brand-primary);
+  --success: var(--brand-success);
+  --success-foreground: #ffffff;
+  --warning: var(--brand-warning);
+  --warning-foreground: #1f2937;
+}
+
+.dark {
+  /* Buddies brand palette (dark) — same accents, deep slate surfaces */
+  --brand-bg: #0f172a;
+  --brand-surface: #1e293b;
+  --brand-ink: #f1f5f9;
+  --brand-muted-text: #94a3b8;
+  --brand-border: #334155;
+
+  --background: var(--brand-bg);
+  --foreground: var(--brand-ink);
+  --card: var(--brand-surface);
+  --card-foreground: var(--brand-ink);
+  --popover: var(--brand-surface);
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
+  --secondary: #1e293b;
+  --secondary-foreground: var(--brand-ink);
+  --muted: #1e293b;
+  --muted-foreground: var(--brand-muted-text);
+  --accent: #1e1b4b;
+  --accent-foreground: var(--brand-ink);
+  --destructive: #f87171;
+  --destructive-foreground: #1f2937;
+  --border: var(--brand-border);
+  --input: var(--brand-border);
+  --ring: var(--brand-primary);
+  --success: var(--brand-success);
+  --success-foreground: #052e1f;
+  --warning: var(--brand-warning);
+  --warning-foreground: #1f2937;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-jakarta);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--brand-primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-coral: var(--brand-accent);
+  --color-coral-foreground: var(--brand-ink);
+  --color-coral-soft: var(--brand-accent-soft);
+  --color-coral-soft-foreground: #9f1239;
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-ink: var(--foreground);
+  --color-surface: var(--card);
+  --color-bg: var(--background);
+
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display leading-tight;
+  }
+  body,
+  p {
+    line-height: 1.6;
+  }
+}

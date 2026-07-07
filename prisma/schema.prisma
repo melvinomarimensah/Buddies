@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum ListingType {
+  PRODUCT
+  SERVICE
+}
+
+enum ListingStatus {
+  ACTIVE
+  PENDING
+  SOLD
+  REMOVED
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+model University {
+  id          String   @id @default(cuid())
+  name        String
+  country     String
+  city        String
+  emailDomain String   @unique
+  createdAt   DateTime @default(now())
+
+  users    User[]
+  listings Listing[]
+}
+
+model User {
+  id           String   @id
+  email        String   @unique
+  fullName     String
+  username     String   @unique
+  universityId String?
+  avatarUrl    String?
+  bio          String?
+  role         Role     @default(STUDENT)
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  university          University?    @relation(fields: [universityId], references: [id])
+  listings            Listing[]
+  favorites           Favorite[]
+  sentMessages        Message[]      @relation("MessageSender")
+  conversationsBought Conversation[] @relation("ConversationBuyer")
+  conversationsSold   Conversation[] @relation("ConversationSeller")
+  reports             Report[]       @relation("ReportReporter")
+  auditLogs           AuditLog[]     @relation("AuditLogAdmin")
+
+  @@index([universityId])
+}
+
+model Category {
+  id   String      @id @default(cuid())
+  name String
+  slug String      @unique
+  icon String
+  type ListingType
+
+  listings Listing[]
+}
+
+model Listing {
+  id           String        @id @default(cuid())
+  sellerId     String
+  type         ListingType
+  title        String
+  description  String
+  price        Int
+  currency     String        @default("USD")
+  categoryId   String
+  condition    String?
+  availability String?
+  images       String[]
+  status       ListingStatus @default(ACTIVE)
+  universityId String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  seller        User           @relation(fields: [sellerId], references: [id])
+  category      Category       @relation(fields: [categoryId], references: [id])
+  university    University     @relation(fields: [universityId], references: [id])
+  conversations Conversation[]
+  favorites     Favorite[]
+  reports       Report[]
+
+  @@index([universityId])
+  @@index([status])
+  @@index([categoryId])
+}
+
+model Conversation {
+  id              String   @id @default(cuid())
+  listingId       String
+  buyerId         String
+  sellerId        String
+  buyerCompleted  Boolean  @default(false)
+  sellerCompleted Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  lastMessageAt   DateTime @default(now())
+
+  listing  Listing   @relation(fields: [listingId], references: [id])
+  buyer    User      @relation("ConversationBuyer", fields: [buyerId], references: [id])
+  seller   User      @relation("ConversationSeller", fields: [sellerId], references: [id])
+  messages Message[]
+
+  @@unique([listingId, buyerId, sellerId])
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([conversationId])
+}
+
+model Favorite {
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  listing Listing @relation(fields: [listingId], references: [id])
+
+  @@id([userId, listingId])
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reporterId String
+  listingId  String
+  reason     String
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+
+  reporter User    @relation("ReportReporter", fields: [reporterId], references: [id])
+  listing  Listing @relation(fields: [listingId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  admin User @relation("AuditLogAdmin", fields: [adminId], references: [id])
+}
