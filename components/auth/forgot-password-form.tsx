@@ -1,43 +1,18 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useActionState } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
-import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validations/auth";
 import { forgotPasswordAction } from "@/lib/actions/auth";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
+import { SubmitButton } from "@/components/auth/submit-button";
+import { FieldError } from "@/components/auth/field-error";
 
 export function ForgotPasswordForm() {
-  const [isPending, startTransition] = useTransition();
-  const [sent, setSent] = useState(false);
+  const [state, formAction] = useActionState(forgotPasswordAction, null);
 
-  const form = useForm<ForgotPasswordInput>({
-    resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: { email: "" },
-  });
-
-  function onSubmit(values: ForgotPasswordInput) {
-    const formData = new FormData();
-    formData.set("email", values.email);
-
-    startTransition(async () => {
-      await forgotPasswordAction(null, formData);
-      setSent(true);
-    });
-  }
-
-  if (sent) {
+  if (state?.success) {
     return (
       <div className="space-y-4 text-center lg:text-left">
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success/10 text-success lg:mx-0">
@@ -62,31 +37,21 @@ export function ForgotPasswordForm() {
           Enter your email and we&apos;ll send you a link to get back in.
         </p>
       </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <FormField
-            control={form.control}
+      <form action={formAction} className="space-y-4">
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="you@university.edu"
-                    autoComplete="email"
-                    inputMode="email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="you@university.edu"
           />
-          <Button type="submit" className="w-full rounded-full" disabled={isPending}>
-            {isPending ? "Sending link…" : "Send reset link"}
-          </Button>
-        </form>
-      </Form>
+          <FieldError messages={state?.fieldErrors?.email} />
+        </div>
+        <SubmitButton pendingLabel="Sending link…">Send reset link</SubmitButton>
+      </form>
       <p className="text-center text-sm text-muted-foreground">
         <Link href="/auth/sign-in" className="font-medium text-primary hover:underline">
           Back to sign in

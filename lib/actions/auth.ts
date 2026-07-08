@@ -13,6 +13,7 @@ import {
 export type AuthActionState = {
   error?: string;
   fieldErrors?: Record<string, string[]>;
+  success?: boolean;
 } | null;
 
 function getSiteUrl() {
@@ -139,7 +140,7 @@ export async function forgotPasswordAction(
     redirectTo: `${getSiteUrl()}/auth/update-password`,
   });
 
-  return { error: undefined };
+  return { success: true };
 }
 
 export async function updatePasswordAction(

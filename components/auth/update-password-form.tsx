@@ -1,46 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { updatePasswordSchema, type UpdatePasswordInput } from "@/lib/validations/auth";
+import { useActionState } from "react";
 import { updatePasswordAction } from "@/lib/actions/auth";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
+import { SubmitButton } from "@/components/auth/submit-button";
+import { FieldError } from "@/components/auth/field-error";
 
 export function UpdatePasswordForm() {
-  const [isPending, startTransition] = useTransition();
-  const [formError, setFormError] = useState<string | null>(null);
-
-  const form = useForm<UpdatePasswordInput>({
-    resolver: zodResolver(updatePasswordSchema),
-    defaultValues: { password: "" },
-  });
-
-  function onSubmit(values: UpdatePasswordInput) {
-    setFormError(null);
-    const formData = new FormData();
-    formData.set("password", values.password);
-
-    startTransition(async () => {
-      const result = await updatePasswordAction(null, formData);
-      if (!result) return;
-      if (result.error) setFormError(result.error);
-      if (result.fieldErrors) {
-        Object.entries(result.fieldErrors).forEach(([field, messages]) => {
-          form.setError(field as keyof UpdatePasswordInput, { message: messages?.[0] });
-        });
-      }
-    });
-  }
+  const [state, formAction] = useActionState(updatePasswordAction, null);
 
   return (
     <div className="space-y-6">
@@ -50,31 +18,25 @@ export function UpdatePasswordForm() {
           Choose something you haven&apos;t used before.
         </p>
       </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <FormField
-            control={form.control}
+      <form action={formAction} className="space-y-4">
+        <div className="grid gap-2">
+          <Label htmlFor="password">New password</Label>
+          <Input
+            id="password"
             name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>New password</FormLabel>
-                <FormControl>
-                  <Input type="password" autoComplete="new-password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            type="password"
+            required
+            autoComplete="new-password"
           />
-          {formError ? (
-            <p role="alert" className="text-sm text-destructive">
-              {formError}
-            </p>
-          ) : null}
-          <Button type="submit" className="w-full rounded-full" disabled={isPending}>
-            {isPending ? "Updating…" : "Update password"}
-          </Button>
-        </form>
-      </Form>
+          <FieldError messages={state?.fieldErrors?.password} />
+        </div>
+        {state?.error ? (
+          <p role="alert" className="text-sm text-destructive">
+            {state.error}
+          </p>
+        ) : null}
+        <SubmitButton pendingLabel="Updating…">Update password</SubmitButton>
+      </form>
     </div>
   );
 }
