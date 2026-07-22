@@ -1,29 +1,9 @@
 import { PrismaClient, ListingType } from "@prisma/client";
+import { US_UNIVERSITIES } from "./universities";
 
 const prisma = new PrismaClient();
 
-const universities = [
-  { name: "Stanford University", country: "USA", city: "Stanford, CA", emailDomain: "stanford.edu" },
-  { name: "University of California, Berkeley", country: "USA", city: "Berkeley, CA", emailDomain: "berkeley.edu" },
-  { name: "Massachusetts Institute of Technology", country: "USA", city: "Cambridge, MA", emailDomain: "mit.edu" },
-  { name: "Harvard University", country: "USA", city: "Cambridge, MA", emailDomain: "harvard.edu" },
-  { name: "University of Michigan", country: "USA", city: "Ann Arbor, MI", emailDomain: "umich.edu" },
-  { name: "University of Texas at Austin", country: "USA", city: "Austin, TX", emailDomain: "utexas.edu" },
-  { name: "New York University", country: "USA", city: "New York, NY", emailDomain: "nyu.edu" },
-  { name: "University of Washington", country: "USA", city: "Seattle, WA", emailDomain: "uw.edu" },
-  { name: "Georgia Institute of Technology", country: "USA", city: "Atlanta, GA", emailDomain: "gatech.edu" },
-  { name: "University of Florida", country: "USA", city: "Gainesville, FL", emailDomain: "ufl.edu" },
-  { name: "Ohio State University", country: "USA", city: "Columbus, OH", emailDomain: "osu.edu" },
-  { name: "Penn State University", country: "USA", city: "University Park, PA", emailDomain: "psu.edu" },
-  { name: "University of Toronto", country: "Canada", city: "Toronto, ON", emailDomain: "utoronto.ca" },
-  { name: "McGill University", country: "Canada", city: "Montreal, QC", emailDomain: "mcgill.ca" },
-  { name: "University of Oxford", country: "UK", city: "Oxford", emailDomain: "ox.ac.uk" },
-  { name: "University of Edinburgh", country: "UK", city: "Edinburgh", emailDomain: "ed.ac.uk" },
-  { name: "Arizona State University", country: "USA", city: "Tempe, AZ", emailDomain: "asu.edu" },
-  { name: "University of Illinois Urbana-Champaign", country: "USA", city: "Champaign, IL", emailDomain: "illinois.edu" },
-  { name: "Boston University", country: "USA", city: "Boston, MA", emailDomain: "bu.edu" },
-  { name: "UCLA", country: "USA", city: "Los Angeles, CA", emailDomain: "ucla.edu" },
-];
+const universities = US_UNIVERSITIES;
 
 const productCategories = [
   { name: "Textbooks", slug: "textbooks", icon: "book-open" },
