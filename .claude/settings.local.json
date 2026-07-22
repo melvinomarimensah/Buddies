@@ -46,7 +46,11 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/browse)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/admin/login)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/admin/dashboard)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(git add *)",
+      "WebFetch(domain:buddies-three.vercel.app)",
+      "Bash(ADMIN_EMAIL=\"admin@buddies.app\" ADMIN_PASSWORD=\"Tonyford1z!\" npm run seed:admin)",
+      "mcp__claude-in-chrome__tabs_context_mcp"
     ]
   }
 }
