@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { Prisma } from "@prisma/client";
+import { PlusCircle } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { getCategories } from "@/lib/data";
@@ -7,7 +9,9 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ListingFilters } from "@/components/listings/listing-filters";
 import { ListingGrid } from "@/components/listings/listing-grid";
+import { BrowseKindTabs } from "@/components/listings/browse-kind-tabs";
 import { Pagination } from "@/components/shared/pagination";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Browse listings — Buddies",
@@ -17,6 +21,7 @@ const PAGE_SIZE = 12;
 
 type BrowseSearchParams = {
   q?: string;
+  kind?: string;
   type?: string;
   category?: string;
   condition?: string;
@@ -45,7 +50,11 @@ export default async function BrowsePage({
       : Promise.resolve(null),
   ]);
 
-  const where: Prisma.ListingWhereInput = { status: "ACTIVE" };
+  const isWanted = params.kind === "wanted";
+  const where: Prisma.ListingWhereInput = {
+    status: "ACTIVE",
+    kind: isWanted ? "WANTED" : "OFFER",
+  };
 
   if (params.q) {
     where.OR = [
@@ -120,16 +129,33 @@ export default async function BrowsePage({
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <div className="mb-6">
-            <h1 className="font-display text-3xl font-bold">Browse listings</h1>
-            <p className="mt-1 text-muted-foreground">
-              {total} {total === 1 ? "listing" : "listings"}{" "}
-              {params.campus === "mine" ? "on your campus" : "across all campuses"}
-            </p>
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="font-display text-3xl font-bold">
+                {isWanted ? "What students want" : "Browse listings"}
+              </h1>
+              <p className="mt-1 text-muted-foreground">
+                {isWanted
+                  ? `${total} open ${total === 1 ? "request" : "requests"} `
+                  : `${total} ${total === 1 ? "listing" : "listings"} `}
+                {params.campus === "mine" ? "on your campus" : "across all campuses"}
+              </p>
+            </div>
+            {isWanted ? (
+              <Button asChild className="rounded-full">
+                <Link href="/wanted/new">
+                  <PlusCircle className="size-4" aria-hidden="true" />
+                  Post a request
+                </Link>
+              </Button>
+            ) : null}
+          </div>
+          <div className="mb-5">
+            <BrowseKindTabs />
           </div>
           <ListingFilters categories={categories} myCampusName={profile?.university?.name ?? null} />
           <div className="mt-6">
-            <ListingGrid listings={listings} favoritedIds={favoritedIds} />
+            <ListingGrid listings={listings} favoritedIds={favoritedIds} wanted={isWanted} />
           </div>
           <div className="mt-10">
             <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />

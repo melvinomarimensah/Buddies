@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { CalendarDays, MapPin, Pencil } from "lucide-react";
+import { CalendarDays, Hand, MapPin, Pencil } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
@@ -12,6 +12,7 @@ import { ListingImageCarousel } from "@/components/listings/image-carousel";
 import { SellerCard } from "@/components/listings/seller-card";
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { MessageSellerButton } from "@/components/listings/message-seller-button";
+import { DeleteListingButton } from "@/components/listings/delete-listing-button";
 import { FavoriteButton } from "@/components/shared/favorite-button";
 import { ReportButton } from "@/components/shared/report-button";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +50,7 @@ export default async function ListingDetailPage({
   } = await supabase.auth.getUser();
 
   const isOwner = user?.id === listing.sellerId;
+  const isWanted = listing.kind === "WANTED";
 
   const [favorite, similarListings] = await Promise.all([
     user
@@ -59,6 +61,7 @@ export default async function ListingDetailPage({
     prisma.listing.findMany({
       where: {
         categoryId: listing.categoryId,
+        kind: listing.kind,
         status: "ACTIVE",
         id: { not: listing.id },
       },
@@ -73,13 +76,24 @@ export default async function ListingDetailPage({
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <Link href="/browse" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            href={isWanted ? "/browse?kind=wanted" : "/browse"}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
             &larr; Back to browse
           </Link>
 
           <div className="mt-4 grid gap-10 lg:grid-cols-5">
             <div className="lg:col-span-3">
-              <ListingImageCarousel images={listing.images} title={listing.title} />
+              {isWanted ? (
+                <div className="flex aspect-square flex-col items-center justify-center gap-3 rounded-2xl bg-coral-soft text-coral-soft-foreground">
+                  <Hand className="size-16" aria-hidden="true" />
+                  <p className="font-display text-xl font-semibold">Looking for this</p>
+                  <p className="text-sm">A student on your campus is hoping to find it.</p>
+                </div>
+              ) : (
+                <ListingImageCarousel images={listing.images} title={listing.title} />
+              )}
             </div>
 
             <div className="space-y-6 lg:col-span-2">
@@ -95,9 +109,16 @@ export default async function ListingDetailPage({
                   ) : null}
                 </div>
                 <p className="mt-2 font-display text-3xl font-bold text-primary">
-                  {formatPrice(listing.price, listing.currency)}
+                  {isWanted
+                    ? listing.price > 0
+                      ? `Budget ${formatPrice(listing.price, listing.currency)}`
+                      : "Open budget"
+                    : formatPrice(listing.price, listing.currency)}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {isWanted ? (
+                    <Badge className="bg-coral text-coral-foreground">Wanted</Badge>
+                  ) : null}
                   <Badge variant="secondary">
                     {listing.type === "PRODUCT" ? "Product" : "Service"}
                   </Badge>
@@ -107,24 +128,34 @@ export default async function ListingDetailPage({
                     <Badge variant="outline">{listing.availability}</Badge>
                   ) : null}
                   {listing.status === "SOLD" ? (
-                    <Badge className="bg-success text-success-foreground">Sold</Badge>
+                    <Badge className="bg-success text-success-foreground">
+                      {isWanted ? "Fulfilled" : "Sold"}
+                    </Badge>
                   ) : null}
                 </div>
               </div>
 
               {isOwner ? (
-                <Button asChild variant="outline" className="w-full rounded-full">
-                  <Link href={`/sell/${listing.id}/edit`}>
-                    <Pencil className="size-4" aria-hidden="true" />
-                    Edit your listing
-                  </Link>
-                </Button>
+                isWanted ? (
+                  <DeleteListingButton listingId={listing.id} />
+                ) : (
+                  <Button asChild variant="outline" className="w-full rounded-full">
+                    <Link href={`/sell/${listing.id}/edit`}>
+                      <Pencil className="size-4" aria-hidden="true" />
+                      Edit your listing
+                    </Link>
+                  </Button>
+                )
               ) : listing.status === "SOLD" ? (
                 <Button disabled className="w-full rounded-full">
-                  This listing is sold
+                  {isWanted ? "This request is closed" : "This listing is sold"}
                 </Button>
               ) : (
-                <MessageSellerButton listingId={listing.id} isAuthenticated={Boolean(user)} />
+                <MessageSellerButton
+                  listingId={listing.id}
+                  isAuthenticated={Boolean(user)}
+                  label={isWanted ? "I have this — message" : "Message seller"}
+                />
               )}
 
               <SellerCard seller={listing.seller} />
@@ -155,9 +186,15 @@ export default async function ListingDetailPage({
 
           {similarListings.length > 0 ? (
             <div className="mt-16">
-              <h2 className="font-display text-2xl font-bold">Similar listings</h2>
+              <h2 className="font-display text-2xl font-bold">
+                {isWanted ? "Similar requests" : "Similar listings"}
+              </h2>
               <div className="mt-6">
-                <ListingGrid listings={similarListings} favoritedIds={new Set()} />
+                <ListingGrid
+                  listings={similarListings}
+                  favoritedIds={new Set()}
+                  wanted={isWanted}
+                />
               </div>
             </div>
           ) : null}

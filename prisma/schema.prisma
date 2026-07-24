@@ -18,6 +18,11 @@ enum ListingType {
   SERVICE
 }
 
+enum ListingKind {
+  OFFER
+  WANTED
+}
+
 enum ListingStatus {
   ACTIVE
   PENDING
@@ -82,6 +87,7 @@ model Category {
 model Listing {
   id           String        @id @default(cuid())
   sellerId     String
+  kind         ListingKind   @default(OFFER)
   type         ListingType
   title        String
   description  String
@@ -106,6 +112,7 @@ model Listing {
   @@index([universityId])
   @@index([status])
   @@index([categoryId])
+  @@index([kind])
 }
 
 model Conversation {

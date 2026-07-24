@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { Hand, MapPin } from "lucide-react";
 import type { Listing, University } from "@prisma/client";
 import { FavoriteButton } from "@/components/shared/favorite-button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,12 @@ export function ListingCard({
   showFavorite?: boolean;
 }) {
   const image = listing.images[0];
+  const isWanted = listing.kind === "WANTED";
+  const priceLabel = isWanted
+    ? listing.price > 0
+      ? `Budget ${formatPrice(listing.price, listing.currency)}`
+      : "Open budget"
+    : formatPrice(listing.price, listing.currency);
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
@@ -27,7 +33,12 @@ export function ListingCard({
         aria-label={listing.title}
       />
       <div className="relative aspect-4/3 w-full overflow-hidden bg-muted">
-        {image ? (
+        {isWanted ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 bg-coral-soft text-coral-soft-foreground">
+            <Hand className="size-8" aria-hidden="true" />
+            <span className="text-xs font-medium">Looking for</span>
+          </div>
+        ) : image ? (
           <Image
             src={image}
             alt={listing.title}
@@ -42,7 +53,7 @@ export function ListingCard({
         )}
         {listing.status === "SOLD" ? (
           <span className="absolute left-3 top-3 z-20 rounded-full bg-ink/80 px-3 py-1 text-xs font-medium text-white">
-            Sold
+            {isWanted ? "Fulfilled" : "Sold"}
           </span>
         ) : null}
         {showFavorite ? (
@@ -57,9 +68,7 @@ export function ListingCard({
       </div>
       <div className="space-y-1.5 p-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-display text-lg font-bold">
-            {formatPrice(listing.price, listing.currency)}
-          </p>
+          <p className="font-display text-lg font-bold">{priceLabel}</p>
           <Badge variant="secondary" className="shrink-0">
             {listing.type === "PRODUCT" ? "Product" : "Service"}
           </Badge>

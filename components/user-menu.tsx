@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, MessageCircle, PlusCircle, Store, User as UserIcon } from "lucide-react";
+import { Hand, LogOut, MessageCircle, PlusCircle, Store, User as UserIcon } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,12 @@ export function UserMenu({ fullName, username, avatarUrl }: UserMenuProps) {
             <Link href="/sell/new">
               <PlusCircle className="size-4" aria-hidden="true" />
               Sell something
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/wanted/new">
+              <Hand className="size-4" aria-hidden="true" />
+              Post a request
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

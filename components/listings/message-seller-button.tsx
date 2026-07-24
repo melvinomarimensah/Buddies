@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 export function MessageSellerButton({
   listingId,
   isAuthenticated,
+  label = "Message seller",
 }: {
   listingId: string;
   isAuthenticated: boolean;
+  label?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -35,7 +37,7 @@ export function MessageSellerButton({
   return (
     <Button onClick={handleClick} disabled={isPending} className="w-full rounded-full">
       <MessageCircle className="size-4" aria-hidden="true" />
-      {isPending ? "Opening…" : "Message seller"}
+      {isPending ? "Opening…" : label}
     </Button>
   );
 }

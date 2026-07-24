@@ -1,16 +1,24 @@
-import { PackageSearch } from "lucide-react";
+import { PackageSearch, Hand } from "lucide-react";
 import { ListingCard, type ListingCardData } from "@/components/listings/listing-card";
 import { EmptyState } from "@/components/shared/empty-state";
 
 export function ListingGrid({
   listings,
   favoritedIds,
+  wanted = false,
 }: {
   listings: ListingCardData[];
   favoritedIds: Set<string>;
+  wanted?: boolean;
 }) {
   if (listings.length === 0) {
-    return (
+    return wanted ? (
+      <EmptyState
+        icon={Hand}
+        title="No open requests yet"
+        description="Be the first to post what you're looking for — someone on campus probably has it."
+      />
+    ) : (
       <EmptyState
         icon={PackageSearch}
         title="No listings match yet"

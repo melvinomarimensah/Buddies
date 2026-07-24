@@ -45,3 +45,28 @@ export const createListingSchema = z
   });
 
 export type CreateListingInput = z.infer<typeof createListingSchema>;
+
+// A "wanted" post is lighter: no photos required, budget is optional, and there's
+// no condition/availability (you're describing what you're after, not what you have).
+export const createWantedSchema = z.object({
+  type: z.enum(["PRODUCT", "SERVICE"]),
+  title: z
+    .string()
+    .trim()
+    .min(4, "Give it a short, clear title.")
+    .max(80, "Keep it under 80 characters.")
+    .refine(noProhibitedContent, { message: PROHIBITED_MESSAGE }),
+  description: z
+    .string()
+    .trim()
+    .min(10, "Add a few more details so people know what you're after.")
+    .max(2000, "Keep it under 2000 characters.")
+    .refine(noProhibitedContent, { message: PROHIBITED_MESSAGE }),
+  categoryId: z.string().min(1, "Choose a category."),
+  budget: z
+    .number()
+    .min(0, "Budget can't be negative.")
+    .max(1_000_000, "That budget looks too high."),
+});
+
+export type CreateWantedInput = z.infer<typeof createWantedSchema>;

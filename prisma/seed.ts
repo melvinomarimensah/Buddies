@@ -298,7 +298,41 @@ async function main() {
     });
   }
 
-  console.log(`Seeded ${createdUniversities.length} universities, ${categoryBySlug.size} categories, ${createdUsers.length} users, ${listings.length} listings.`);
+  // "Wanted" / in-search-of posts
+  const wanted: Array<{
+    sellerUsername: string;
+    type: ListingType;
+    title: string;
+    description: string;
+    budget: number;
+    categorySlug: string;
+  }> = [
+    { sellerUsername: "ava_chen", type: ListingType.PRODUCT, title: "Mini fridge for my dorm", description: "Moving into the dorms next week and looking for a compact mini fridge in decent shape. Can pick up on campus.", budget: 4000, categorySlug: "dorm-kitchen" },
+    { sellerUsername: "marcus_reed", type: ListingType.PRODUCT, title: "Organic Chemistry textbook (Klein)", description: "Need the Klein Organic Chemistry textbook for next semester. Any recent edition works — highlighting is fine.", budget: 5000, categorySlug: "textbooks" },
+    { sellerUsername: "priya_nair", type: ListingType.SERVICE, title: "Calculus II tutor before finals", description: "Looking for someone strong in Calc II to review a few times before finals. Flexible timing, can meet at the library.", budget: 2500, categorySlug: "tutoring" },
+    { sellerUsername: "leo_martinez", type: ListingType.PRODUCT, title: "Used commuter bike, size M", description: "Hoping to find a reliable used bike for getting around campus. Prefer a hybrid/commuter, medium frame.", budget: 8000, categorySlug: "bikes-scooters" },
+  ];
+
+  for (const request of wanted) {
+    const seller = userByUsername.get(request.sellerUsername)!;
+    const category = categoryBySlug.get(request.categorySlug)!;
+
+    await prisma.listing.create({
+      data: {
+        sellerId: seller.id,
+        kind: "WANTED",
+        type: request.type,
+        title: request.title,
+        description: request.description,
+        price: request.budget,
+        categoryId: category.id,
+        images: [],
+        universityId: seller.universityId!,
+      },
+    });
+  }
+
+  console.log(`Seeded ${createdUniversities.length} universities, ${categoryBySlug.size} categories, ${createdUsers.length} users, ${listings.length} listings, ${wanted.length} requests.`);
 }
 
 main()
