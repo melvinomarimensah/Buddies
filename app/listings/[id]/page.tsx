@@ -52,7 +52,7 @@ export default async function ListingDetailPage({
   const isOwner = user?.id === listing.sellerId;
   const isWanted = listing.kind === "WANTED";
 
-  const [favorite, similarListings] = await Promise.all([
+  const [favorite, similarListings, matchingRequestCount] = await Promise.all([
     user
       ? prisma.favorite.findUnique({
           where: { userId_listingId: { userId: user.id, listingId: listing.id } },
@@ -69,6 +69,17 @@ export default async function ListingDetailPage({
       orderBy: { createdAt: "desc" },
       take: 4,
     }),
+    // For an item on sale, how many students on this campus are asking for this category?
+    isWanted
+      ? Promise.resolve(0)
+      : prisma.listing.count({
+          where: {
+            kind: "WANTED",
+            status: "ACTIVE",
+            categoryId: listing.categoryId,
+            universityId: listing.universityId,
+          },
+        }),
   ]);
 
   return (
@@ -157,6 +168,22 @@ export default async function ListingDetailPage({
                   label={isWanted ? "I have this — message" : "Message seller"}
                 />
               )}
+
+              {!isWanted && matchingRequestCount > 0 ? (
+                <Link
+                  href={`/browse?kind=wanted&category=${listing.category.slug}`}
+                  className="flex items-center gap-3 rounded-2xl border border-coral/40 bg-coral-soft px-4 py-3 text-sm text-coral-soft-foreground transition-colors hover:bg-coral-soft/70"
+                >
+                  <Hand className="size-5 shrink-0" aria-hidden="true" />
+                  <span>
+                    <span className="font-semibold">
+                      {matchingRequestCount} student{matchingRequestCount === 1 ? "" : "s"}
+                    </span>{" "}
+                    on your campus {matchingRequestCount === 1 ? "is" : "are"} looking for{" "}
+                    {listing.category.name} — see their requests →
+                  </span>
+                </Link>
+              ) : null}
 
               <SellerCard seller={listing.seller} />
 

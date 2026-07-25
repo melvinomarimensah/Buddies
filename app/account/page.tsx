@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Package, Heart, User as UserIcon } from "lucide-react";
+import { Package, Heart, Hand, User as UserIcon } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/lib/actions/auth";
@@ -49,6 +49,9 @@ export default async function AccountPage() {
     }),
   ]);
 
+  const myOffers = listings.filter((listing) => listing.kind === "OFFER");
+  const myRequests = listings.filter((listing) => listing.kind === "WANTED");
+
   const favoriteListings = favorites
     .map((favorite) => favorite.listing)
     .filter((listing) => listing.status === "ACTIVE");
@@ -82,6 +85,10 @@ export default async function AccountPage() {
                 <Package className="size-4" aria-hidden="true" />
                 My listings
               </TabsTrigger>
+              <TabsTrigger value="requests">
+                <Hand className="size-4" aria-hidden="true" />
+                My requests
+              </TabsTrigger>
               <TabsTrigger value="favorites">
                 <Heart className="size-4" aria-hidden="true" />
                 Favorites
@@ -101,7 +108,7 @@ export default async function AccountPage() {
             </TabsContent>
 
             <TabsContent value="listings" className="mt-6 space-y-3">
-              {listings.length === 0 ? (
+              {myOffers.length === 0 ? (
                 <EmptyState
                   icon={Package}
                   title="No listings yet"
@@ -113,7 +120,24 @@ export default async function AccountPage() {
                   }
                 />
               ) : (
-                listings.map((listing) => <MyListingRow key={listing.id} listing={listing} />)
+                myOffers.map((listing) => <MyListingRow key={listing.id} listing={listing} />)
+              )}
+            </TabsContent>
+
+            <TabsContent value="requests" className="mt-6 space-y-3">
+              {myRequests.length === 0 ? (
+                <EmptyState
+                  icon={Hand}
+                  title="No requests yet"
+                  description="Can't find what you need? Post a request and people who have it can reach out."
+                  action={
+                    <Button asChild className="mt-2 rounded-full">
+                      <Link href="/wanted/new">Post a request</Link>
+                    </Button>
+                  }
+                />
+              ) : (
+                myRequests.map((listing) => <MyListingRow key={listing.id} listing={listing} />)
               )}
             </TabsContent>
 
