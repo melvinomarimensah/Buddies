@@ -104,7 +104,7 @@ export async function signInAction(
 
   const redirectTo = formData.get("redirectTo");
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
     if (error.code === "email_not_confirmed") {
@@ -114,6 +114,19 @@ export async function signInAction(
       };
     }
     return { error: "That email and password don't match. Give it another try." };
+  }
+
+  const profile = data.user
+    ? await prisma.user.findUnique({
+        where: { id: data.user.id },
+        select: { deactivatedAt: true },
+      })
+    : null;
+  if (profile?.deactivatedAt) {
+    await supabase.auth.signOut();
+    return {
+      error: "This account is deactivated. Contact support to have it restored.",
+    };
   }
 
   redirect(typeof redirectTo === "string" && redirectTo.startsWith("/") ? redirectTo : "/account");

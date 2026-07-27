@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ProfileForm } from "@/components/account/profile-form";
 import { MyListingRow } from "@/components/account/my-listing-row";
+import { DeactivateAccountButton } from "@/components/account/deactivate-account-button";
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -105,6 +106,9 @@ export default async function AccountPage() {
                   avatarUrl: profile.avatarUrl ?? "",
                 }}
               />
+              <div className="mt-10 max-w-lg">
+                <DeactivateAccountButton />
+              </div>
             </TabsContent>
 
             <TabsContent value="listings" className="mt-6 space-y-3">

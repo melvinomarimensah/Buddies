@@ -8,6 +8,7 @@ import {
   adminSetUserVerifiedAction,
   adminSetUserSuspendedAction,
   adminSetUserRoleAction,
+  adminReactivateUserAction,
 } from "@/lib/actions/admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ type Row = {
   role: "STUDENT" | "ADMIN";
   isVerified: boolean;
   isSuspended: boolean;
+  isDeactivated: boolean;
   universityName: string | null;
   listingCount: number;
 };
@@ -90,13 +92,32 @@ export function AdminUsersTable({ users, currentAdminId }: { users: Row[]; curre
                       {user.isSuspended ? (
                         <Badge variant="destructive">Suspended</Badge>
                       ) : null}
-                      {!user.isVerified && !user.isSuspended && user.role !== "ADMIN" ? (
+                      {user.isDeactivated ? (
+                        <Badge variant="destructive">Deactivated</Badge>
+                      ) : null}
+                      {!user.isVerified &&
+                      !user.isSuspended &&
+                      !user.isDeactivated &&
+                      user.role !== "ADMIN" ? (
                         <Badge variant="outline">Student</Badge>
                       ) : null}
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap justify-end gap-1.5">
+                      {user.isDeactivated ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="rounded-full"
+                          disabled={isPending}
+                          onClick={() =>
+                            run(() => adminReactivateUserAction(user.id), "Account reactivated.")
+                          }
+                        >
+                          Reactivate
+                        </Button>
+                      ) : null}
                       <Button
                         type="button"
                         size="sm"

@@ -54,6 +54,7 @@ export default async function BrowsePage({
   const where: Prisma.ListingWhereInput = {
     status: "ACTIVE",
     kind: isWanted ? "WANTED" : "OFFER",
+    seller: { deactivatedAt: null },
   };
 
   if (params.q) {

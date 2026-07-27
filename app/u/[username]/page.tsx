@@ -40,7 +40,7 @@ export default async function PublicProfilePage({
     include: { university: true },
   });
 
-  if (!profile) {
+  if (!profile || profile.deactivatedAt) {
     notFound();
   }
 

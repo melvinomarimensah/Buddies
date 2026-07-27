@@ -74,6 +74,20 @@ export async function adminSetUserSuspendedAction(userId: string, isSuspended: b
   return { success: true };
 }
 
+export async function adminReactivateUserAction(userId: string): Promise<AdminResult> {
+  const admin = await requireAdmin();
+  await prisma.user.update({ where: { id: userId }, data: { deactivatedAt: null } });
+  await recordAudit({
+    adminId: admin.id,
+    action: "user.reactivate",
+    targetType: "User",
+    targetId: userId,
+  });
+  revalidatePath("/admin/users");
+  revalidatePath("/browse");
+  return { success: true };
+}
+
 export async function adminSetUserRoleAction(userId: string, role: "STUDENT" | "ADMIN"): Promise<AdminResult> {
   const admin = await requireAdmin();
   if (userId === admin.id && role !== "ADMIN") {

@@ -27,7 +27,7 @@ export async function adminSignInAction(
   }
 
   const profile = await prisma.user.findUnique({ where: { id: data.user.id } });
-  if (profile?.role !== "ADMIN") {
+  if (profile?.role !== "ADMIN" || profile.deactivatedAt) {
     await supabase.auth.signOut();
     return { error: "This account doesn't have admin access." };
   }
