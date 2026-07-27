@@ -87,7 +87,20 @@ export default async function BrowsePage({
 
   if (params.campus === "mine" && profile?.universityId) {
     where.universityId = profile.universityId;
+  } else if (params.campus && params.campus !== "all") {
+    // A specific campus id (e.g. from a "students at X are looking for…" link)
+    where.universityId = params.campus;
   }
+
+  const campusName =
+    params.campus === "mine"
+      ? profile?.university?.name ?? null
+      : params.campus && params.campus !== "all"
+        ? (await prisma.university.findUnique({
+            where: { id: params.campus },
+            select: { name: true },
+          }))?.name ?? null
+        : null;
 
   const orderBy: Prisma.ListingOrderByWithRelationInput =
     params.sort === "price_asc"
@@ -138,7 +151,11 @@ export default async function BrowsePage({
                 {isWanted
                   ? `${total} open ${total === 1 ? "request" : "requests"} `
                   : `${total} ${total === 1 ? "listing" : "listings"} `}
-                {params.campus === "mine" ? "on your campus" : "across all campuses"}
+                {campusName
+                  ? `at ${campusName}`
+                  : params.campus === "mine"
+                    ? "on your campus"
+                    : "across all campuses"}
               </p>
             </div>
             {isWanted ? (

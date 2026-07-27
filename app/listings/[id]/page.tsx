@@ -171,7 +171,7 @@ export default async function ListingDetailPage({
 
               {!isWanted && matchingRequestCount > 0 ? (
                 <Link
-                  href={`/browse?kind=wanted&category=${listing.category.slug}`}
+                  href={`/browse?kind=wanted&category=${listing.category.slug}&campus=${listing.universityId}`}
                   className="flex items-center gap-3 rounded-2xl border border-coral/40 bg-coral-soft px-4 py-3 text-sm text-coral-soft-foreground transition-colors hover:bg-coral-soft/70"
                 >
                   <Hand className="size-5 shrink-0" aria-hidden="true" />
@@ -179,8 +179,8 @@ export default async function ListingDetailPage({
                     <span className="font-semibold">
                       {matchingRequestCount} student{matchingRequestCount === 1 ? "" : "s"}
                     </span>{" "}
-                    on your campus {matchingRequestCount === 1 ? "is" : "are"} looking for{" "}
-                    {listing.category.name} — see their requests →
+                    at {listing.university.name} {matchingRequestCount === 1 ? "is" : "are"} looking
+                    for {listing.category.name} — see their requests →
                   </span>
                 </Link>
               ) : null}
