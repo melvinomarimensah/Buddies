@@ -40,7 +40,7 @@ export function ListingFilters({
   const type = searchParams.get("type") ?? "";
   const category = searchParams.get("category") ?? "";
   const condition = searchParams.get("condition") ?? "";
-  const campus = searchParams.get("campus") ?? "all";
+  const campus = searchParams.get("campus") ?? (myCampusName ? "mine" : "all");
   const sort = searchParams.get("sort") ?? "newest";
 
   return (
@@ -74,13 +74,13 @@ export function ListingFilters({
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex overflow-hidden rounded-full border border-border">
           {[
-            { value: "all", label: "All campuses" },
             ...(myCampusName ? [{ value: "mine", label: "My campus" }] : []),
+            { value: "all", label: "All campuses" },
           ].map((option) => (
             <button
               key={option.value}
               type="button"
-              onClick={() => updateParams({ campus: option.value === "all" ? null : option.value })}
+              onClick={() => updateParams({ campus: option.value })}
               className={cn(
                 "px-4 py-2 text-sm font-medium transition-colors",
                 campus === option.value

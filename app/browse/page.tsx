@@ -86,19 +86,23 @@ export default async function BrowsePage({
     where.price = priceFilter;
   }
 
-  if (params.campus === "mine" && profile?.universityId) {
-    where.universityId = profile.universityId;
-  } else if (params.campus && params.campus !== "all") {
+  // Signed-in students default to their own campus; they can switch to "all",
+  // and logged-out visitors see every campus by default.
+  const campusScope = params.campus ?? (profile?.universityId ? "mine" : "all");
+
+  if (campusScope === "mine") {
+    if (profile?.universityId) where.universityId = profile.universityId;
+  } else if (campusScope !== "all") {
     // A specific campus id (e.g. from a "students at X are looking for…" link)
-    where.universityId = params.campus;
+    where.universityId = campusScope;
   }
 
   const campusName =
-    params.campus === "mine"
+    campusScope === "mine"
       ? profile?.university?.name ?? null
-      : params.campus && params.campus !== "all"
+      : campusScope !== "all"
         ? (await prisma.university.findUnique({
-            where: { id: params.campus },
+            where: { id: campusScope },
             select: { name: true },
           }))?.name ?? null
         : null;
@@ -152,11 +156,7 @@ export default async function BrowsePage({
                 {isWanted
                   ? `${total} open ${total === 1 ? "request" : "requests"} `
                   : `${total} ${total === 1 ? "listing" : "listings"} `}
-                {campusName
-                  ? `at ${campusName}`
-                  : params.campus === "mine"
-                    ? "on your campus"
-                    : "across all campuses"}
+                {campusName ? `at ${campusName}` : "across all campuses"}
               </p>
             </div>
             {isWanted ? (
