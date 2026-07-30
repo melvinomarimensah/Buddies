@@ -18,13 +18,20 @@ const columns = [
       { label: "My account", href: "/account" },
     ],
   },
+  {
+    title: "Legal",
+    links: [
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Privacy Policy", href: "/privacy" },
+    ],
+  },
 ];
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border/60 bg-background">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-[2fr_1fr_1fr]">
+        <div className="grid gap-10 sm:grid-cols-[2fr_1fr_1fr_1fr]">
           <div className="space-y-3">
             <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold">
               <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">

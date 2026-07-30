@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { ProfileForm } from "@/components/account/profile-form";
 import { MyListingRow } from "@/components/account/my-listing-row";
 import { DeactivateAccountButton } from "@/components/account/deactivate-account-button";
+import { DeleteAccountButton } from "@/components/account/delete-account-button";
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -106,8 +107,9 @@ export default async function AccountPage() {
                   avatarUrl: profile.avatarUrl ?? "",
                 }}
               />
-              <div className="mt-10 max-w-lg">
+              <div className="mt-10 max-w-lg space-y-4">
                 <DeactivateAccountButton />
+                <DeleteAccountButton username={profile.username} />
               </div>
             </TabsContent>
 
