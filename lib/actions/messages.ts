@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { sendMessageSchema } from "@/lib/validations/message";
 
 async function getUserId() {
@@ -25,6 +26,15 @@ export async function startConversationAction(listingId: string) {
   const userId = await getUserId();
   if (!userId) return { error: "Sign in to message a seller." };
   if (await isSuspended(userId)) return { error: "Your account is suspended." };
+  if (
+    !(await rateLimit(
+      `convo:${userId}`,
+      RATE_LIMITS.startConversation.limit,
+      RATE_LIMITS.startConversation.windowSeconds
+    ))
+  ) {
+    return { error: "You're reaching out to a lot of people quickly. Please try again later." };
+  }
 
   const listing = await prisma.listing.findUnique({ where: { id: listingId } });
   if (!listing || listing.status === "REMOVED") {
@@ -62,6 +72,15 @@ export async function sendMessageAction(input: { conversationId: string; body: s
   const userId = await getUserId();
   if (!userId) return { error: "Sign in to send messages." };
   if (await isSuspended(userId)) return { error: "Your account is suspended." };
+  if (
+    !(await rateLimit(
+      `message:${userId}`,
+      RATE_LIMITS.sendMessage.limit,
+      RATE_LIMITS.sendMessage.windowSeconds
+    ))
+  ) {
+    return { error: "You're sending messages too fast. Take a breather and try again." };
+  }
 
   const conversation = await prisma.conversation.findUnique({
     where: { id: parsed.data.conversationId },

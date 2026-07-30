@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
 import { recordAudit } from "@/lib/audit";
+import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 const reportSchema = z.object({
   listingId: z.string().min(1),
@@ -23,6 +24,15 @@ export async function createReportAction(input: { listingId: string; reason: str
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sign in to report a listing." };
+  if (
+    !(await rateLimit(
+      `report:${user.id}`,
+      RATE_LIMITS.createReport.limit,
+      RATE_LIMITS.createReport.windowSeconds
+    ))
+  ) {
+    return { error: "You've submitted several reports. Please try again later." };
+  }
 
   const listing = await prisma.listing.findUnique({ where: { id: parsed.data.listingId } });
   if (!listing) return { error: "That listing no longer exists." };

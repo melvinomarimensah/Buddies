@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import {
   createListingSchema,
   createWantedSchema,
@@ -24,6 +25,16 @@ export async function createWantedAction(input: CreateWantedInput) {
 
   if (!user) {
     return { error: "You need to be signed in to post a request." };
+  }
+
+  if (
+    !(await rateLimit(
+      `listing:${user.id}`,
+      RATE_LIMITS.createListing.limit,
+      RATE_LIMITS.createListing.windowSeconds
+    ))
+  ) {
+    return { error: "You're posting a lot in a short time. Please try again later." };
   }
 
   const profile = await prisma.user.findUnique({ where: { id: user.id } });
@@ -66,6 +77,16 @@ export async function createListingAction(input: CreateListingInput) {
 
   if (!user) {
     return { error: "You need to be signed in to publish a listing." };
+  }
+
+  if (
+    !(await rateLimit(
+      `listing:${user.id}`,
+      RATE_LIMITS.createListing.limit,
+      RATE_LIMITS.createListing.windowSeconds
+    ))
+  ) {
+    return { error: "You're posting a lot in a short time. Please try again later." };
   }
 
   const profile = await prisma.user.findUnique({ where: { id: user.id } });

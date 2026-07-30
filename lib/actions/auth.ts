@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import {
   forgotPasswordSchema,
   signInSchema,
@@ -34,6 +35,11 @@ export async function signUpAction(
 
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const ip = await getClientIp();
+  if (!(await rateLimit(`signup:${ip}`, RATE_LIMITS.signUp.limit, RATE_LIMITS.signUp.windowSeconds))) {
+    return { error: "Too many sign-up attempts. Please wait a little while and try again." };
   }
 
   const { fullName, username, email, universityId, password } = parsed.data;
@@ -100,6 +106,11 @@ export async function signInAction(
 
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const ip = await getClientIp();
+  if (!(await rateLimit(`signin:${ip}`, RATE_LIMITS.signIn.limit, RATE_LIMITS.signIn.windowSeconds))) {
+    return { error: "Too many attempts. Please wait a minute and try again." };
   }
 
   const redirectTo = formData.get("redirectTo");

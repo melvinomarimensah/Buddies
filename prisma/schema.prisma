@@ -182,3 +182,11 @@ model AuditLog {
 
   admin User @relation("AuditLogAdmin", fields: [adminId], references: [id])
 }
+
+// Fixed-window rate-limit counters. One row per (action, subject) key, updated
+// atomically. Not tied to a user via FK so a user's deletion never blocks on it.
+model RateLimit {
+  key         String   @id
+  count       Int      @default(1)
+  windowStart DateTime @default(now())
+}

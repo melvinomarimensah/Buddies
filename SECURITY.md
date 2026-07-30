@@ -52,6 +52,16 @@ anon API. Whenever you add a table:
 2. Run `npm run check:rls` — it fails if any public table has RLS disabled. Wire
    this into CI / run it before deploying.
 
+## Rate limiting
+
+Abuse-prone server actions are throttled with an atomic fixed-window limiter
+(`lib/rate-limit.ts`) backed by the `RateLimit` table — no external service.
+Covered: sign-in and sign-up (per IP), and listing/request creation, message
+sending, starting conversations, and reporting (per user). Limits live in
+`RATE_LIMITS`. The limiter fails open, so a limiter error never blocks a real
+user. For higher scale, this can be swapped for Upstash/Redis behind the same
+`rateLimit()` interface.
+
 ## Known residual risk (not yet fixed)
 
 - **Realtime chat broadcast channels are not access-controlled.** The chat client
