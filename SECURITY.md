@@ -43,6 +43,15 @@ uses. The true boundary is the authorization logic in **server actions** and
   `supabase.auth.getUser()` server-side and authorize against it. Never trust an
   id passed from the client without an ownership/role check.
 
+This boundary is covered by an integration test suite (`tests/authorization.test.ts`,
+run with `npm test`) that exercises the real server actions against an isolated
+local Postgres database (`buddies_test`) with the auth identity mocked. It asserts
+that outsiders can't read/send/mark conversations, non-admins can't run admin
+actions, deactivation takes effect, and rate limits trip. One-time setup:
+`npm run test:setup` (see `.env.test`). Add cases here whenever you add an action
+that touches user-owned data — a failing test is the alarm if a refactor reopens a
+hole.
+
 ## Adding a new table
 
 New Postgres tables default to **RLS OFF**, which would expose them via the public
