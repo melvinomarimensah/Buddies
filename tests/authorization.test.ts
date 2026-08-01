@@ -39,6 +39,8 @@ import {
 } from "@/lib/actions/messages";
 import { adminSetUserSuspendedAction } from "@/lib/actions/admin";
 import { deactivateAccountAction } from "@/lib/actions/account";
+import { markAllNotificationsReadAction } from "@/lib/actions/notifications";
+import { notifyNewMessage, notifyRequestMatches } from "@/lib/notifications";
 import { rateLimit } from "@/lib/rate-limit";
 
 function signInAs(id: string | null) {
@@ -58,7 +60,7 @@ async function catchRedirect(fn: () => Promise<unknown>): Promise<string | null>
 
 async function truncate() {
   await prisma.$executeRawUnsafe(
-    `TRUNCATE "Message","Conversation","Favorite","Report","AuditLog","RateLimit","Listing","User","Category","University" RESTART IDENTITY CASCADE;`
+    `TRUNCATE "Notification","Message","Conversation","Favorite","Report","AuditLog","RateLimit","Listing","User","Category","University" RESTART IDENTITY CASCADE;`
   );
 }
 
@@ -265,5 +267,95 @@ describe("rate limiting", () => {
       await rateLimit(key, 3, 60),
     ];
     expect(outcomes).toEqual([true, true, true, false]);
+  });
+});
+
+describe("notifications", () => {
+  it("mark-all-read only affects the caller's notifications", async () => {
+    const { mkUser } = await seedBase();
+    await mkUser("alice");
+    await mkUser("bob");
+    await prisma.notification.createMany({
+      data: [
+        { userId: "alice", type: "MESSAGE", title: "t", body: "b", linkUrl: "/messages" },
+        { userId: "bob", type: "MESSAGE", title: "t", body: "b", linkUrl: "/messages" },
+      ],
+    });
+
+    signInAs("alice");
+    await markAllNotificationsReadAction();
+    expect(await prisma.notification.count({ where: { userId: "alice", readAt: null } })).toBe(0);
+    expect(await prisma.notification.count({ where: { userId: "bob", readAt: null } })).toBe(1);
+  });
+
+  it("a new message notifies the recipient, collapsed to one per conversation", async () => {
+    const { uni, cat, mkUser } = await seedBase();
+    await mkUser("alice");
+    await mkUser("bob");
+    const { convo } = await seedConversation("bob", "alice", uni.id, cat.id);
+
+    await notifyNewMessage({ recipientId: "alice", senderName: "Bob", conversationId: convo.id, preview: "hi" });
+    await notifyNewMessage({ recipientId: "alice", senderName: "Bob", conversationId: convo.id, preview: "you there?" });
+
+    const notes = await prisma.notification.findMany({ where: { userId: "alice", type: "MESSAGE" } });
+    expect(notes).toHaveLength(1);
+    expect(notes[0].body).toBe("you there?");
+  });
+
+  it("a new listing notifies only same-campus requesters in the same category", async () => {
+    const { uni, cat, mkUser } = await seedBase();
+    const uni2 = await prisma.university.create({
+      data: { name: "Other U", country: "US", city: "X", emailDomain: `o${Date.now()}.edu` },
+    });
+    const cat2 = await prisma.category.create({
+      data: { name: "Bikes", slug: `bikes-${Date.now()}`, icon: "bike", type: "PRODUCT" },
+    });
+    await mkUser("seller");
+    await mkUser("wantMatch"); // same campus + category -> notified
+    await mkUser("wantOtherCat"); // same campus, other category -> not
+    await mkUser("wantOtherUni"); // same category, other campus -> not
+
+    const wanted = (sellerId: string, universityId: string, categoryId: string) =>
+      prisma.listing.create({
+        data: {
+          sellerId,
+          universityId,
+          categoryId,
+          kind: "WANTED",
+          type: "PRODUCT",
+          title: "want",
+          description: "x",
+          price: 0,
+        },
+      });
+    await wanted("wantMatch", uni.id, cat.id);
+    await wanted("wantOtherCat", uni.id, cat2.id);
+    await wanted("wantOtherUni", uni2.id, cat.id);
+
+    const offer = await prisma.listing.create({
+      data: {
+        sellerId: "seller",
+        universityId: uni.id,
+        categoryId: cat.id,
+        type: "PRODUCT",
+        title: "Nice thing",
+        description: "x",
+        price: 100,
+      },
+    });
+    await notifyRequestMatches({
+      listingId: offer.id,
+      listingTitle: offer.title,
+      categoryId: cat.id,
+      universityId: uni.id,
+      sellerId: "seller",
+    });
+
+    const count = (id: string) =>
+      prisma.notification.count({ where: { userId: id, type: "REQUEST_MATCH" } });
+    expect(await count("wantMatch")).toBe(1);
+    expect(await count("wantOtherCat")).toBe(0);
+    expect(await count("wantOtherUni")).toBe(0);
+    expect(await count("seller")).toBe(0);
   });
 });

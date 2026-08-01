@@ -36,6 +36,11 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum NotificationType {
+  MESSAGE
+  REQUEST_MATCH
+}
+
 model University {
   id          String   @id @default(cuid())
   name        String
@@ -71,6 +76,7 @@ model User {
   conversationsSold   Conversation[] @relation("ConversationSeller")
   reports             Report[]       @relation("ReportReporter")
   auditLogs           AuditLog[]     @relation("AuditLogAdmin")
+  notifications       Notification[] @relation("UserNotifications")
 
   @@index([universityId])
 }
@@ -189,4 +195,25 @@ model RateLimit {
   key         String   @id
   count       Int      @default(1)
   windowStart DateTime @default(now())
+}
+
+// In-app notifications. Title/body/linkUrl are denormalized so rendering needs
+// no joins and survives deletion of the source. conversationId/listingId are
+// plain columns (no FK) used for collapsing/context only.
+model Notification {
+  id             String           @id @default(cuid())
+  userId         String
+  type           NotificationType
+  title          String
+  body           String
+  linkUrl        String
+  conversationId String?
+  listingId      String?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  user User @relation("UserNotifications", fields: [userId], references: [id])
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }

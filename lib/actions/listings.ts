@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { notifyRequestMatches } from "@/lib/notifications";
 import {
   createListingSchema,
   createWantedSchema,
@@ -110,6 +111,14 @@ export async function createListingAction(input: CreateListingInput) {
       availability: parsed.data.type === "SERVICE" ? parsed.data.availability : null,
       images: parsed.data.images,
     },
+  });
+
+  await notifyRequestMatches({
+    listingId: listing.id,
+    listingTitle: listing.title,
+    categoryId: listing.categoryId,
+    universityId: listing.universityId,
+    sellerId: listing.sellerId,
   });
 
   revalidatePath("/browse");

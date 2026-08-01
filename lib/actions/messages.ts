@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { notifyNewMessage } from "@/lib/notifications";
 import { sendMessageSchema } from "@/lib/validations/message";
 
 async function getUserId() {
@@ -102,6 +103,19 @@ export async function sendMessageAction(input: { conversationId: string; body: s
     data: { lastMessageAt: message.createdAt },
   });
 
+  const recipientId =
+    conversation.buyerId === userId ? conversation.sellerId : conversation.buyerId;
+  const sender = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { fullName: true },
+  });
+  await notifyNewMessage({
+    recipientId,
+    senderName: sender?.fullName ?? "Someone",
+    conversationId: conversation.id,
+    preview: parsed.data.body,
+  });
+
   revalidatePath("/messages");
 
   return {
@@ -152,6 +166,10 @@ export async function markConversationReadAction(conversationId: string) {
 
   await prisma.message.updateMany({
     where: { conversationId, senderId: { not: userId }, readAt: null },
+    data: { readAt: new Date() },
+  });
+  await prisma.notification.updateMany({
+    where: { userId, type: "MESSAGE", conversationId, readAt: null },
     data: { readAt: new Date() },
   });
 

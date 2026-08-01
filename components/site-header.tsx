@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
+import { NotificationBell } from "@/components/notification-bell";
 import { MobileNav } from "@/components/mobile-nav";
 
 export async function SiteHeader() {
@@ -12,12 +13,15 @@ export async function SiteHeader() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const profile = user
-    ? await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { fullName: true, username: true, avatarUrl: true },
-      })
-    : null;
+  const [profile, unreadCount] = user
+    ? await Promise.all([
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { fullName: true, username: true, avatarUrl: true },
+        }),
+        prisma.notification.count({ where: { userId: user.id, readAt: null } }),
+      ])
+    : [null, 0];
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
@@ -44,11 +48,14 @@ export async function SiteHeader() {
         </nav>
         <div className="flex items-center gap-2">
           {profile ? (
-            <UserMenu
-              fullName={profile.fullName}
-              username={profile.username}
-              avatarUrl={profile.avatarUrl}
-            />
+            <>
+              <NotificationBell count={unreadCount} />
+              <UserMenu
+                fullName={profile.fullName}
+                username={profile.username}
+                avatarUrl={profile.avatarUrl}
+              />
+            </>
           ) : (
             <>
               <Button variant="ghost" asChild>

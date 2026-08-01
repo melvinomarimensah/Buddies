@@ -97,7 +97,9 @@ export async function deleteAccountAction() {
       });
       // 5. The user's listings.
       await tx.listing.deleteMany({ where: { sellerId: userId } });
-      // 6. The user profile row itself.
+      // 6. The user's notifications.
+      await tx.notification.deleteMany({ where: { userId } });
+      // 7. The user profile row itself.
       await tx.user.delete({ where: { id: userId } });
     },
     { timeout: 15000 }
