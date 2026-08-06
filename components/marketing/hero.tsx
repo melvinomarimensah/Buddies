@@ -3,13 +3,13 @@ import { FadeIn } from "@/components/motion/fade-in";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const stats = [
-  { label: "Built for students", value: "100%" },
-  { label: "Platform fees", value: "$0" },
-  { label: "Campuses live", value: "20+" },
-];
+export function Hero({ campusCount }: { campusCount: number }) {
+  const stats = [
+    { label: "Built for students", value: "100%" },
+    { label: "Platform fees", value: "$0" },
+    { label: "Campuses live", value: `${campusCount}` },
+  ];
 
-export function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div
@@ -19,7 +19,7 @@ export function Hero() {
             "radial-gradient(circle at 15% 10%, color-mix(in oklab, var(--color-primary) 12%, transparent), transparent 40%), radial-gradient(circle at 85% 25%, color-mix(in oklab, var(--color-coral) 18%, transparent), transparent 40%)",
         }}
       />
-      <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28">
+      <div className="mx-auto flex min-h-[calc(100svh-4rem)] max-w-4xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
         <FadeIn>
           <span className="inline-flex items-center rounded-full bg-coral-soft px-4 py-1.5 text-sm font-medium text-coral-soft-foreground">
             Built exclusively for college students
