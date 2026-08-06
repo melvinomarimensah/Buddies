@@ -71,15 +71,20 @@ sending, starting conversations, and reporting (per user). Limits live in
 user. For higher scale, this can be swapped for Upstash/Redis behind the same
 `rateLimit()` interface.
 
-## Known residual risk (not yet fixed)
+## Realtime chat channels
 
-- **Realtime chat broadcast channels are not access-controlled.** The chat client
-  (`components/messages/messages-view.tsx`) subscribes to `conversation:<id>`
-  broadcast channels. Supabase broadcast is open by default, so anyone with the
-  anon key who obtains a specific conversation id could subscribe and eavesdrop on
-  *new* live messages, or inject fake ones. Conversation ids are unguessable
-  (`cuid`) and not exposed to third parties, and the stored message **history** is
-  protected by the authorization checks above — so this is defense-in-depth, not an
-  open door. Fix: switch to **private channels** (`config: { private: true }` +
-  `realtime.setAuth()`) and add an RLS policy on `realtime.messages` that admits
-  only conversation participants. Needs live two-user testing.
+The chat uses **private** Supabase Realtime channels (`conversation:<id>`). The
+client (`components/messages/messages-view.tsx`) opens them with
+`config: { private: true }` and calls `realtime.setAuth()` with the signed-in
+user's JWT, so Realtime authorizes every subscribe/send against an RLS policy on
+`realtime.messages` (migration `20260806130000_realtime_private_channels`). The
+policy admits only a conversation's buyer or seller; a holder of just the public
+anon key cannot subscribe or inject events.
+
+Because `public."Conversation"` has RLS enabled with no policies for the
+`authenticated` role, the participation check runs through a `SECURITY DEFINER`
+function (`public.realtime_is_conversation_participant`) so it can read the
+Conversation row while the policy is evaluated as the authenticated user.
+
+Verified live: two authenticated participants exchange broadcasts in real time; a
+non-participant and an anon-key-only client are both denied.

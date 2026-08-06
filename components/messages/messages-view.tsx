@@ -71,43 +71,58 @@ export function MessagesView({
     [currentUserId]
   );
 
-  // Subscribe to the active conversation's realtime channel.
+  // Subscribe to the active conversation's PRIVATE realtime channel. Private
+  // channels are authorized by RLS on realtime.messages (see the
+  // realtime_private_channels migration), so only the conversation's buyer and
+  // seller can subscribe or send — a holder of just the public anon key can't
+  // eavesdrop. We must hand Realtime the signed-in user's JWT via setAuth first.
   useEffect(() => {
     if (!activeId) return;
     const supabase = createClient();
-    const channel = supabase.channel(`conversation:${activeId}`, {
-      config: { broadcast: { self: false } },
-    });
+    let channel: RealtimeChannel | null = null;
+    let cancelled = false;
 
-    channel
-      .on("broadcast", { event: "message" }, ({ payload }) => {
-        const msg = payload as ChatMessage;
-        if (msg.senderId === currentUserId) return;
-        setMessages((prev) =>
-          prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
-        );
-        setOtherTyping(false);
-        scrollToBottom();
-        void markRead(activeId);
-      })
-      .on("broadcast", { event: "typing" }, ({ payload }) => {
-        if ((payload as { userId: string }).userId === currentUserId) return;
-        setOtherTyping(true);
-        if (typingTimeout.current) clearTimeout(typingTimeout.current);
-        typingTimeout.current = setTimeout(() => setOtherTyping(false), 3000);
-      })
-      .on("broadcast", { event: "read" }, ({ payload }) => {
-        if ((payload as { userId: string }).userId === currentUserId) return;
-        setOtherHasRead(true);
-      })
-      .on("broadcast", { event: "met" }, () => {
-        toast.info("Your buddy confirmed the meetup.");
-      })
-      .subscribe();
+    void (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      await supabase.realtime.setAuth(session?.access_token);
+      if (cancelled) return;
 
-    channelRef.current = channel;
+      channel = supabase.channel(`conversation:${activeId}`, {
+        config: { private: true, broadcast: { self: false } },
+      });
+
+      channel
+        .on("broadcast", { event: "message" }, ({ payload }) => {
+          const msg = payload as ChatMessage;
+          if (msg.senderId === currentUserId) return;
+          setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+          setOtherTyping(false);
+          scrollToBottom();
+          void markRead(activeId);
+        })
+        .on("broadcast", { event: "typing" }, ({ payload }) => {
+          if ((payload as { userId: string }).userId === currentUserId) return;
+          setOtherTyping(true);
+          if (typingTimeout.current) clearTimeout(typingTimeout.current);
+          typingTimeout.current = setTimeout(() => setOtherTyping(false), 3000);
+        })
+        .on("broadcast", { event: "read" }, ({ payload }) => {
+          if ((payload as { userId: string }).userId === currentUserId) return;
+          setOtherHasRead(true);
+        })
+        .on("broadcast", { event: "met" }, () => {
+          toast.info("Your buddy confirmed the meetup.");
+        })
+        .subscribe();
+
+      channelRef.current = channel;
+    })();
+
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
       channelRef.current = null;
     };
   }, [activeId, currentUserId, scrollToBottom, markRead]);
