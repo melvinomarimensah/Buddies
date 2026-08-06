@@ -101,6 +101,16 @@ async function seedConversation(sellerId: string, buyerId: string, uniId: string
   return { listing, convo };
 }
 
+// The exact seller filter Browse and listing pages use for public visibility.
+function publicListingCount() {
+  return prisma.listing.count({
+    where: {
+      status: "ACTIVE",
+      seller: { deactivatedAt: null, listingsHidden: false, isSuspended: false },
+    },
+  });
+}
+
 beforeAll(() => {
   // Hard guardrail: never run this suite against anything but the test DB.
   const url = process.env.DATABASE_URL ?? "";
@@ -271,22 +281,42 @@ describe("admin hide listings", () => {
       },
     });
 
-    // The exact seller filter Browse and listing pages use for public visibility.
-    const publicCount = () =>
-      prisma.listing.count({
-        where: { status: "ACTIVE", seller: { deactivatedAt: null, listingsHidden: false } },
-      });
-
-    expect(await publicCount()).toBe(1);
+    expect(await publicListingCount()).toBe(1);
 
     signInAs("boss");
     await adminSetUserListingsHiddenAction("seller", true);
-    expect(await publicCount()).toBe(0);
+    expect(await publicListingCount()).toBe(0);
     // Hidden, not deleted — the seller still owns the listing.
     expect(await prisma.listing.count({ where: { sellerId: "seller" } })).toBe(1);
 
     await adminSetUserListingsHiddenAction("seller", false);
-    expect(await publicCount()).toBe(1);
+    expect(await publicListingCount()).toBe(1);
+  });
+
+  it("suspending a user also hides their listings from public browse", async () => {
+    const { uni, cat, mkUser } = await seedBase();
+    await mkUser("boss", "ADMIN");
+    await mkUser("seller");
+    await prisma.listing.create({
+      data: {
+        sellerId: "seller",
+        universityId: uni.id,
+        categoryId: cat.id,
+        type: "PRODUCT",
+        title: "Desk lamp",
+        description: "x",
+        price: 1000,
+      },
+    });
+
+    expect(await publicListingCount()).toBe(1);
+
+    signInAs("boss");
+    await adminSetUserSuspendedAction("seller", true);
+    expect(await publicListingCount()).toBe(0);
+    // Reinstating brings them back — listings were never deleted.
+    await adminSetUserSuspendedAction("seller", false);
+    expect(await publicListingCount()).toBe(1);
   });
 });
 

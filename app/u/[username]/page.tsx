@@ -50,7 +50,7 @@ export default async function PublicProfilePage({
   } = await supabase.auth.getUser();
 
   const [listings, favorites] = await Promise.all([
-    profile.listingsHidden
+    profile.listingsHidden || profile.isSuspended
       ? Promise.resolve([])
       : prisma.listing.findMany({
           where: { sellerId: profile.id, status: "ACTIVE" },
