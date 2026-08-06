@@ -50,11 +50,13 @@ export default async function PublicProfilePage({
   } = await supabase.auth.getUser();
 
   const [listings, favorites] = await Promise.all([
-    prisma.listing.findMany({
-      where: { sellerId: profile.id, status: "ACTIVE" },
-      include: { university: true },
-      orderBy: { createdAt: "desc" },
-    }),
+    profile.listingsHidden
+      ? Promise.resolve([])
+      : prisma.listing.findMany({
+          where: { sellerId: profile.id, status: "ACTIVE" },
+          include: { university: true },
+          orderBy: { createdAt: "desc" },
+        }),
     user
       ? prisma.favorite.findMany({ where: { userId: user.id }, select: { listingId: true } })
       : Promise.resolve([]),

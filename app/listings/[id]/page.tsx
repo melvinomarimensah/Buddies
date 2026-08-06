@@ -40,7 +40,12 @@ export default async function ListingDetailPage({
     include: { seller: true, category: true, university: true },
   });
 
-  if (!listing || listing.status === "REMOVED" || listing.seller.deactivatedAt) {
+  if (
+    !listing ||
+    listing.status === "REMOVED" ||
+    listing.seller.deactivatedAt ||
+    listing.seller.listingsHidden
+  ) {
     notFound();
   }
 
@@ -64,7 +69,7 @@ export default async function ListingDetailPage({
         kind: listing.kind,
         status: "ACTIVE",
         id: { not: listing.id },
-        seller: { deactivatedAt: null },
+        seller: { deactivatedAt: null, listingsHidden: false },
       },
       include: { university: true },
       orderBy: { createdAt: "desc" },
@@ -79,7 +84,7 @@ export default async function ListingDetailPage({
             status: "ACTIVE",
             categoryId: listing.categoryId,
             universityId: listing.universityId,
-            seller: { deactivatedAt: null },
+            seller: { deactivatedAt: null, listingsHidden: false },
           },
         }),
   ]);

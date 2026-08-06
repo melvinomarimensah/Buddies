@@ -37,7 +37,7 @@ import {
   markMetAction,
   startConversationAction,
 } from "@/lib/actions/messages";
-import { adminSetUserSuspendedAction } from "@/lib/actions/admin";
+import { adminSetUserSuspendedAction, adminSetUserListingsHiddenAction } from "@/lib/actions/admin";
 import { deactivateAccountAction } from "@/lib/actions/account";
 import { markAllNotificationsReadAction } from "@/lib/actions/notifications";
 import { notifyNewMessage, notifyRequestMatches } from "@/lib/notifications";
@@ -241,6 +241,52 @@ describe("admin authorization", () => {
     const res = await adminSetUserSuspendedAction("victim", true);
     expect(res.success).toBe(true);
     expect((await prisma.user.findUnique({ where: { id: "victim" } }))?.isSuspended).toBe(true);
+  });
+});
+
+describe("admin hide listings", () => {
+  it("a non-admin cannot hide a user's listings", async () => {
+    const { mkUser } = await seedBase();
+    await mkUser("alice");
+    await mkUser("victim");
+
+    signInAs("alice");
+    await expect(adminSetUserListingsHiddenAction("victim", true)).rejects.toThrow();
+    expect((await prisma.user.findUnique({ where: { id: "victim" } }))?.listingsHidden).toBe(false);
+  });
+
+  it("hiding a user removes their listings from public browse; showing restores them", async () => {
+    const { uni, cat, mkUser } = await seedBase();
+    await mkUser("boss", "ADMIN");
+    await mkUser("seller");
+    await prisma.listing.create({
+      data: {
+        sellerId: "seller",
+        universityId: uni.id,
+        categoryId: cat.id,
+        type: "PRODUCT",
+        title: "Desk lamp",
+        description: "x",
+        price: 1000,
+      },
+    });
+
+    // The exact seller filter Browse and listing pages use for public visibility.
+    const publicCount = () =>
+      prisma.listing.count({
+        where: { status: "ACTIVE", seller: { deactivatedAt: null, listingsHidden: false } },
+      });
+
+    expect(await publicCount()).toBe(1);
+
+    signInAs("boss");
+    await adminSetUserListingsHiddenAction("seller", true);
+    expect(await publicCount()).toBe(0);
+    // Hidden, not deleted — the seller still owns the listing.
+    expect(await prisma.listing.count({ where: { sellerId: "seller" } })).toBe(1);
+
+    await adminSetUserListingsHiddenAction("seller", false);
+    expect(await publicCount()).toBe(1);
   });
 });
 

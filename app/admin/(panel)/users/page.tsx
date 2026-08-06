@@ -34,6 +34,7 @@ export default async function AdminUsersPage({
   if (params.filter === "admin") where.role = "ADMIN";
   else if (params.filter === "verified") where.isVerified = true;
   else if (params.filter === "suspended") where.isSuspended = true;
+  else if (params.filter === "listings_hidden") where.listingsHidden = true;
   else if (params.filter === "deactivated") where.deactivatedAt = { not: null };
 
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
@@ -61,6 +62,7 @@ export default async function AdminUsersPage({
     role: u.role,
     isVerified: u.isVerified,
     isSuspended: u.isSuspended,
+    listingsHidden: u.listingsHidden,
     isDeactivated: u.deactivatedAt !== null,
     universityName: u.university?.name ?? null,
     listingCount: u._count.listings,
@@ -87,6 +89,7 @@ export default async function AdminUsersPage({
               { value: "admin", label: "Admins" },
               { value: "verified", label: "Verified" },
               { value: "suspended", label: "Suspended" },
+              { value: "listings_hidden", label: "Listings hidden" },
               { value: "deactivated", label: "Deactivated" },
             ]}
           />

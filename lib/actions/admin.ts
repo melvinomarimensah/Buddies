@@ -74,6 +74,23 @@ export async function adminSetUserSuspendedAction(userId: string, isSuspended: b
   return { success: true };
 }
 
+export async function adminSetUserListingsHiddenAction(
+  userId: string,
+  listingsHidden: boolean
+): Promise<AdminResult> {
+  const admin = await requireAdmin();
+  await prisma.user.update({ where: { id: userId }, data: { listingsHidden } });
+  await recordAudit({
+    adminId: admin.id,
+    action: listingsHidden ? "user.hide_listings" : "user.show_listings",
+    targetType: "User",
+    targetId: userId,
+  });
+  revalidatePath("/admin/users");
+  revalidatePath("/browse");
+  return { success: true };
+}
+
 export async function adminReactivateUserAction(userId: string): Promise<AdminResult> {
   const admin = await requireAdmin();
   await prisma.user.update({ where: { id: userId }, data: { deactivatedAt: null } });

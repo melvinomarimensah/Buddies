@@ -57,7 +57,7 @@ export async function notifyRequestMatches(params: {
           categoryId: params.categoryId,
           universityId: params.universityId,
           sellerId: { not: params.sellerId },
-          seller: { deactivatedAt: null, isSuspended: false },
+          seller: { deactivatedAt: null, isSuspended: false, listingsHidden: false },
         },
         select: { sellerId: true },
         distinct: ["sellerId"],

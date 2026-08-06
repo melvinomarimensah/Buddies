@@ -7,6 +7,7 @@ import { ExternalLink } from "lucide-react";
 import {
   adminSetUserVerifiedAction,
   adminSetUserSuspendedAction,
+  adminSetUserListingsHiddenAction,
   adminSetUserRoleAction,
   adminReactivateUserAction,
 } from "@/lib/actions/admin";
@@ -21,6 +22,7 @@ type Row = {
   role: "STUDENT" | "ADMIN";
   isVerified: boolean;
   isSuspended: boolean;
+  listingsHidden: boolean;
   isDeactivated: boolean;
   universityName: string | null;
   listingCount: number;
@@ -92,11 +94,15 @@ export function AdminUsersTable({ users, currentAdminId }: { users: Row[]; curre
                       {user.isSuspended ? (
                         <Badge variant="destructive">Suspended</Badge>
                       ) : null}
+                      {user.listingsHidden ? (
+                        <Badge variant="secondary">Listings hidden</Badge>
+                      ) : null}
                       {user.isDeactivated ? (
                         <Badge variant="destructive">Deactivated</Badge>
                       ) : null}
                       {!user.isVerified &&
                       !user.isSuspended &&
+                      !user.listingsHidden &&
                       !user.isDeactivated &&
                       user.role !== "ADMIN" ? (
                         <Badge variant="outline">Student</Badge>
@@ -147,6 +153,22 @@ export function AdminUsersTable({ users, currentAdminId }: { users: Row[]; curre
                         }
                       >
                         {user.isSuspended ? "Reinstate" : "Suspend"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full"
+                        disabled={isPending}
+                        onClick={() =>
+                          run(
+                            () =>
+                              adminSetUserListingsHiddenAction(user.id, !user.listingsHidden),
+                            user.listingsHidden ? "Listings visible again." : "Listings hidden."
+                          )
+                        }
+                      >
+                        {user.listingsHidden ? "Show listings" : "Hide listings"}
                       </Button>
                       <Button
                         type="button"

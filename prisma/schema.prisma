@@ -61,10 +61,11 @@ model User {
   universityId String?
   avatarUrl    String?
   bio          String?
-  role          Role      @default(STUDENT)
-  isVerified    Boolean   @default(false)
-  isSuspended   Boolean   @default(false)
-  deactivatedAt DateTime?
+  role           Role      @default(STUDENT)
+  isVerified     Boolean   @default(false)
+  isSuspended    Boolean   @default(false)
+  listingsHidden Boolean   @default(false)
+  deactivatedAt  DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
