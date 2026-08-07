@@ -28,6 +28,13 @@ const serviceCategories = [
   { name: "Pet Sitting", slug: "pet-sitting", icon: "paw-print" },
   { name: "Cleaning", slug: "cleaning", icon: "sparkles" },
   { name: "Event Help", slug: "event-help", icon: "calendar" },
+  { name: "Hair Styling", slug: "hair-styling", icon: "scissors" },
+  { name: "Makeup & Beauty", slug: "makeup-beauty", icon: "brush" },
+  { name: "Nails", slug: "nails", icon: "hand" },
+  { name: "Baking & Treats", slug: "baking", icon: "chef-hat" },
+  { name: "Graphic Design", slug: "graphic-design", icon: "pen-tool" },
+  { name: "Music Lessons", slug: "music-lessons", icon: "music" },
+  { name: "Fitness & Training", slug: "fitness-training", icon: "heart-pulse" },
 ];
 
 const seedUsers = [

@@ -18,6 +18,12 @@ import {
   PawPrint,
   Sparkles,
   CalendarDays,
+  Scissors,
+  Brush,
+  Hand,
+  ChefHat,
+  PenTool,
+  HeartPulse,
   Tag,
   type LucideIcon,
 } from "lucide-react";
@@ -42,6 +48,12 @@ const ICONS: Record<string, LucideIcon> = {
   "paw-print": PawPrint,
   sparkles: Sparkles,
   calendar: CalendarDays,
+  scissors: Scissors,
+  brush: Brush,
+  hand: Hand,
+  "chef-hat": ChefHat,
+  "pen-tool": PenTool,
+  "heart-pulse": HeartPulse,
 };
 
 export function getCategoryIcon(name: string): LucideIcon {
